@@ -48,7 +48,7 @@ const freshFruitDrink = drinkSizes(800, 900);
 // stockUnits 表示卖出一个该规格时，要扣减的库存个数。
 const baoVariants: Variant[] = [
   { id: "single", label: "单个", priceCents: 400, stockUnits: 1 },
-  { id: "portion-3", label: "3 个／份", priceCents: 900, stockUnits: 3 },
+  { id: "portion-3", label: "3 个／份", priceCents: 1000, stockUnits: 3 },
 ];
 
 const dumplingVariants: Variant[] = [
@@ -160,3 +160,20 @@ export const products: readonly Product[] = [
     variants: [{ id: "250ml", label: "250 mL", priceCents: 500 }],
   },
 ];
+
+export const toppings = [
+  { id: "tapioca", name: "珍珠", priceCents: 50 },
+  { id: "coconut-jelly", name: "椰果", priceCents: 50 },
+  { id: "crystal-boba", name: "脆啵啵", priceCents: 50 },
+  { id: "oreo", name: "奥利奥", priceCents: 50 },
+  { id: "popping-boba-strawberry", name: "草莓爆爆珠", priceCents: 50 },
+  { id: "popping-boba-mango", name: "芒果爆爆珠", priceCents: 50 },
+  { id: "popping-boba-passion-fruit", name: "百香果爆爆珠", priceCents: 50 },
+  { id: "popping-boba-peach", name: "水蜜桃爆爆珠", priceCents: 50 },
+  { id: "popping-boba-lychee", name: "荔枝爆爆珠", priceCents: 50 },
+  { id: "mochi", name: "麻薯", priceCents: 100 },
+  { id: "cheese-foam", name: "奶盖", priceCents: 100 },
+  { id: "red-sticky-rice", name: "血糯米", priceCents: 100 },
+] as const;
+
+export type Topping = (typeof toppings)[number];
