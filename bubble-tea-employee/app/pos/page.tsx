@@ -7,7 +7,7 @@ import type { Product, Variant } from "./menu";
 
 type CategoryId = (typeof categories)[number]["id"];
 
-type CartProduct = Pick<Product, "id" | "name" | "unavailable">;
+type CartProduct = Pick<Product, "id" | "name" | "unavailable"> & Partial<Pick<Product, "subcategory">>;
 
 const toppingProducts: (CartProduct & { variants: Variant[] })[] = toppings.map(({ id, name, priceCents }) => ({
   id: `topping:${id}`,
@@ -93,10 +93,21 @@ export default function PosPage() {
     paymentMethod: PaymentMethod;
   } | null>(null);
 
-  const totalCents = cart.reduce(
+  const subtotalCents = cart.reduce(
     (total, item) => total + item.variant.priceCents * item.quantity,
     0,
   );
+
+  const baoSingles = cart
+    .filter(({ product, variant }) => product.subcategory === "bao" && variant.id === "single")
+    .map(({ quantity }) => quantity);
+  let mixedTrios = Math.floor(baoSingles.reduce((sum, quantity) => sum + quantity, 0) / 3);
+  while (mixedTrios > 0 &&
+    baoSingles.reduce((sum, quantity) => sum + Math.min(quantity, mixedTrios), 0) < 3 * mixedTrios) {
+    mixedTrios--;
+  }
+  const discountCents = mixedTrios * 200;
+  const totalCents = subtotalCents - discountCents;
 
   function openCheckout() {
     setPaymentMethod(null);
@@ -293,6 +304,11 @@ export default function PosPage() {
           </ul>
 
           <div className="mt-3 flex flex-wrap items-center justify-end gap-4 border-t border-stone-200 pt-3">
+            {mixedTrios > 0 && (
+              <p className="text-sm text-emerald-800">
+                拼口味 × {mixedTrios} · 优惠 {priceFormatter.format(discountCents / 100)}
+              </p>
+            )}
             <p aria-live="polite" className="font-bold">
               总计 {priceFormatter.format(totalCents / 100)}
             </p>
