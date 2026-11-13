@@ -98,14 +98,9 @@ export default function PosPage() {
     0,
   );
 
-  const baoSingles = cart
-    .filter(({ product, variant }) => product.subcategory === "bao" && variant.id === "single")
-    .map(({ quantity }) => quantity);
-  let mixedTrios = Math.floor(baoSingles.reduce((sum, quantity) => sum + quantity, 0) / 3);
-  while (mixedTrios > 0 &&
-    baoSingles.reduce((sum, quantity) => sum + Math.min(quantity, mixedTrios), 0) < 3 * mixedTrios) {
-    mixedTrios--;
-  }
+  const baoSingles = cart.reduce((sum, { product, variant, quantity }) =>
+    product.subcategory === "bao" && variant.id === "single" ? sum + quantity : sum, 0);
+  const mixedTrios = Math.floor(baoSingles / 3);
   const discountCents = mixedTrios * 200;
   const totalCents = subtotalCents - discountCents;
 
