@@ -1,15 +1,15 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { categories, products, subcategories, toppings } from "./menu";
 import type { Product, Variant } from "./menu";
 
 type CategoryId = (typeof categories)[number]["id"];
 
-type CartProduct = Pick<Product, "id" | "name">;
+type CartProduct = Pick<Product, "id" | "name" | "unavailable">;
 
-const toppingProducts = toppings.map(({ id, name, priceCents }) => ({
+const toppingProducts: (CartProduct & { variants: Variant[] })[] = toppings.map(({ id, name, priceCents }) => ({
   id: `topping:${id}`,
   name,
   variants: [{ id: "portion", label: "加一份", priceCents }],
@@ -24,6 +24,7 @@ type CartItem = {
 const paymentMethods = [
   { id: "cash", label: "现金" },
   { id: "card", label: "刷卡" },
+  { id: "uber", label: "Uber Eats" },
 ] as const;
 
 type PaymentMethod = (typeof paymentMethods)[number];
@@ -33,16 +34,60 @@ const priceFormatter = new Intl.NumberFormat("fr-CH", {
   currency: "CHF",
 });
 
+function createCheckoutId() {
+  if (typeof crypto.randomUUID === "function") return crypto.randomUUID();
+
+  // Plain HTTP on the local network still supports getRandomValues.
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+  return [hex.slice(0, 8), hex.slice(8, 12), hex.slice(12, 16), hex.slice(16, 20), hex.slice(20)].join("-");
+}
+
 export default function PosPage() {
   const [categoryId, setCategoryId] = useState<CategoryId>(1);
   const [subcategoryId, setSubcategoryId] = useState("");
 
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [stock, setStock] = useState<Record<string, number> | null>(null);
+  const [stockError, setStockError] = useState(false);
+  const stockRequest = useRef<AbortController | null>(null);
+
+  const refreshStock = useCallback(async () => {
+    stockRequest.current?.abort();
+    const controller = new AbortController();
+    stockRequest.current = controller;
+    try {
+      const response = await fetch("/api/inventory", { signal: controller.signal, cache: "no-store" });
+      if (!response.ok) throw new Error("Inventory unavailable");
+      const quantities = await response.json();
+      if (controller.signal.aborted) return;
+      setStock(quantities);
+      setStockError(false);
+    } catch {
+      if (controller.signal.aborted) return;
+      setStock(null);
+      setStockError(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    const initial = window.setTimeout(refreshStock, 0);
+    return () => {
+      window.clearTimeout(initial);
+      stockRequest.current?.abort();
+    };
+  }, [refreshStock]);
+
   const checkoutDialog = useRef<HTMLDialogElement>(null);
   const checkoutButton = useRef<HTMLButtonElement>(null);
   const checkoutStatus = useRef<HTMLParagraphElement>(null);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [checkoutError, setCheckoutError] = useState("");
+  const [requiresLogin, setRequiresLogin] = useState(false);
+  const [checkoutId, setCheckoutId] = useState<string | null>(null);
   const [receipt, setReceipt] = useState<{
     totalCents: number;
     paymentMethod: PaymentMethod;
@@ -55,6 +100,8 @@ export default function PosPage() {
 
   function openCheckout() {
     setPaymentMethod(null);
+    setCheckoutError("");
+    setRequiresLogin(false);
     const dialog = checkoutDialog.current;
     if (dialog) {
       dialog.returnValue = "";
@@ -66,18 +113,61 @@ export default function PosPage() {
     event.preventDefault();
     if (!paymentMethod || cart.length === 0 || isSubmitting) return;
 
+    const orderCheckoutId = checkoutId ?? createCheckoutId();
+    setCheckoutId(orderCheckoutId);
     setIsSubmitting(true);
-    // Simulate a request until the checkout API is available.
-    await new Promise<void>((resolve) => window.setTimeout(resolve, 350));
+    setCheckoutError("");
+    setRequiresLogin(false);
 
-    setReceipt({ totalCents, paymentMethod });
-    setCart([]);
-    setIsSubmitting(false);
-    checkoutDialog.current?.close("confirmed");
+    try {
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          p_checkout_id: orderCheckoutId,
+          p_payment_method: paymentMethod.id,
+          p_items: cart.map(({ product, variant, quantity }) => ({
+            product_id: product.id,
+            variant_id: variant.id,
+            quantity,
+          })),
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        setRequiresLogin(response.status === 401);
+        if (response.status === 400 || response.status === 403 || response.status === 422 || response.status === 503) {
+          setCheckoutId(null);
+        }
+        if (response.status === 422) void refreshStock();
+        setCheckoutError(result.error || "结账失败，请重试。");
+        return;
+      }
+
+      setCheckoutId(null);
+      setReceipt({ totalCents: result.total_cents, paymentMethod });
+      setCart([]);
+      void refreshStock();
+      checkoutDialog.current?.close("confirmed");
+    } catch {
+      setCheckoutError("尚未确认订单是否保存。请在此窗口重试同一笔订单。");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  function canAdd(product: CartProduct, variant: Variant, items: CartItem[]) {
+    if (product.unavailable) return false;
+    if (!variant.stockUnits) return true;
+    if (!stock) return false;
+    const used = items.reduce((units, item) =>
+      item.product.id === product.id ? units + (item.variant.stockUnits ?? 0) * item.quantity : units, 0);
+    return used + variant.stockUnits <= (stock[product.id] ?? 0);
   }
 
   function changeQuantity(product: CartProduct, variant: Variant, change: 1 | -1) {
     setCart((currentCart) => {
+      if (change === 1 && !canAdd(product, variant, currentCart)) return currentCart;
       const matches = (item: CartItem) =>
         item.product.id === product.id && item.variant.id === variant.id;
 
@@ -104,7 +194,7 @@ export default function PosPage() {
     ...(categoryId === 2 ? [["toppings", { name: "小料" }] as const] : []),
   ];
 
-  const visibleProducts = subcategoryId === "toppings"
+  const visibleProducts: readonly (CartProduct & Pick<Product, "variants">)[] = subcategoryId === "toppings"
     ? toppingProducts
     : products.filter((product) => {
         const matchesCategory =
@@ -188,8 +278,9 @@ export default function PosPage() {
                   <button
                     type="button"
                     onClick={() => changeQuantity(product, variant, 1)}
+                    disabled={!canAdd(product, variant, cart)}
                     aria-label={`增加${product.name} ${variant.label}`}
-                    className="rounded border border-stone-300 px-3 py-1"
+                    className="rounded border border-stone-300 px-3 py-1 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     +
                   </button>
@@ -222,7 +313,7 @@ export default function PosPage() {
             className={receipt ? "mt-3 text-sm text-emerald-800" : "sr-only"}
           >
             {receipt &&
-              `模拟结账完成 · ${receipt.paymentMethod.label} · ${priceFormatter.format(receipt.totalCents / 100)}`}
+              `结账完成 · ${receipt.paymentMethod.label} · ${priceFormatter.format(receipt.totalCents / 100)}`}
           </p>
         </section>
 
@@ -230,7 +321,7 @@ export default function PosPage() {
           ref={checkoutDialog}
           aria-labelledby="checkout-title"
           onCancel={(event) => {
-            if (isSubmitting) event.preventDefault();
+            if (checkoutId) event.preventDefault();
           }}
           onClose={(event) => {
             if (event.currentTarget.returnValue === "confirmed") {
@@ -246,11 +337,18 @@ export default function PosPage() {
             <p className="mt-2 font-medium">
               应收 {priceFormatter.format(totalCents / 100)}
             </p>
-            <p className="mt-1 text-sm text-stone-600">模拟结账</p>
+            {requiresLogin && (
+              <a href="/staff-login" target="_blank" rel="noopener" className="mt-2 inline-block text-sm font-medium text-emerald-800 underline">
+                在新标签页重新登录
+              </a>
+            )}
+            {checkoutError && (
+              <p role="alert" className="mt-2 text-sm text-red-700">{checkoutError}</p>
+            )}
 
-            <fieldset disabled={isSubmitting} className="mt-5">
+            <fieldset disabled={isSubmitting || checkoutId !== null} className="mt-5">
               <legend className="mb-2 text-sm font-medium">付款方式</legend>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                 {paymentMethods.map((method) => (
                   <label
                     key={method.id}
@@ -273,7 +371,7 @@ export default function PosPage() {
             <div className="mt-6 flex justify-end gap-2">
               <button
                 type="button"
-                disabled={isSubmitting}
+                disabled={isSubmitting || checkoutId !== null}
                 onClick={() => checkoutDialog.current?.close("cancelled")}
                 className="rounded-lg border border-stone-300 px-4 py-2 disabled:opacity-50"
               >
@@ -290,33 +388,44 @@ export default function PosPage() {
           </form>
         </dialog>
 
+        {categoryId === 1 && !stock && (
+          <p role="status" className="mb-3 text-sm text-stone-600">
+            {stockError ? "暂时无法读取库存，请刷新页面。" : "正在读取库存…"}
+          </p>
+        )}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {visibleProducts.map((product) => (
-            <article
-              key={product.id}
-              className="rounded-xl border border-stone-200 bg-white p-4"
-            >
-              <h2 className="mb-3 text-lg font-semibold">{product.name}</h2>
+          {visibleProducts.map((product) => {
+            const soldOut = stock !== null && product.variants.some((variant) => variant.stockUnits) &&
+              (stock[product.id] ?? 0) === 0;
 
-              <ul className="space-y-2">
-                {product.variants.map((variant) => (
-                  <li key={variant.id}>
-                    <button
-                      type="button"
-                      onClick={() => changeQuantity(product, variant, 1)}
-                      aria-label={`加入${product.name} ${variant.label}`}
-                      className="flex w-full justify-between gap-3 rounded-lg bg-stone-100 px-3 py-2 text-left text-sm hover:bg-emerald-100"
-                    >
-                      <span>{variant.label}</span>
-                      <span className="whitespace-nowrap font-semibold">
-                        {priceFormatter.format(variant.priceCents / 100)}
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </article>
-          ))}
+            return (
+              <article
+                key={product.id}
+                className={product.unavailable || soldOut ? "rounded-xl border border-stone-200 bg-stone-100 p-4 text-stone-500" : "rounded-xl border border-stone-200 bg-white p-4"}
+              >
+                <h2 className="mb-3 text-lg font-semibold">{product.name}{(product.unavailable || soldOut) && <span className="ml-2 text-sm font-normal">{product.unavailable ? "暂停供应" : "已售罄"}</span>}</h2>
+
+                <ul className="space-y-2">
+                  {product.variants.map((variant) => (
+                    <li key={variant.id}>
+                      <button
+                        type="button"
+                        onClick={() => changeQuantity(product, variant, 1)}
+                        disabled={!canAdd(product, variant, cart)}
+                        aria-label={`加入${product.name} ${variant.label}`}
+                        className="flex w-full justify-between gap-3 rounded-lg bg-stone-100 px-3 py-2 text-left text-sm enabled:hover:bg-emerald-100 disabled:cursor-not-allowed disabled:bg-stone-200 disabled:text-stone-500"
+                      >
+                        <span>{variant.label}</span>
+                        <span className="whitespace-nowrap font-semibold">
+                          {priceFormatter.format(variant.priceCents / 100)}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            );
+          })}
         </div>
       </div>
     </main>

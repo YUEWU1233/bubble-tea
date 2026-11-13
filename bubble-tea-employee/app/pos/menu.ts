@@ -30,6 +30,7 @@ export type Product = {
   id: string;
   name: string;
   subcategory: SubcategoryId;
+  unavailable?: boolean;
   variants: readonly Variant[];
 };
 
@@ -67,23 +68,27 @@ export const products: readonly Product[] = [
   { id: "R6", name: "猪肉白菜饺子", subcategory: "dumplings", variants: dumplingVariants },
   { id: "R7", name: "胡萝卜鸡蛋饺子", subcategory: "dumplings", variants: dumplingVariants },
   { id: "R8", name: "牛肉饺子", subcategory: "dumplings", variants: dumplingVariants },
+  { id: "R9", name: "香菇节瓜饺子", subcategory: "dumplings", variants: dumplingVariants },
 
   // 小食和沙拉
   {
     id: "9",
     name: "五香茶叶蛋",
+    unavailable: true,
     subcategory: "sides",
     variants: [{ id: "single", label: "1 个", priceCents: 250 }],
   },
   {
     id: "11",
     name: "海带沙拉",
+    unavailable: true,
     subcategory: "salads",
     variants: [{ id: "portion", label: "1 份", priceCents: 900 }],
   },
   {
     id: "12",
     name: "蔬菜沙拉",
+    unavailable: true,
     subcategory: "salads",
     variants: [{ id: "portion", label: "1 份", priceCents: 900 }],
   },
