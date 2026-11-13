@@ -2,11 +2,18 @@ import { checkStaffSession } from "../../staff-auth";
 
 export async function POST(request: Request) {
   const origin = request.headers.get("origin");
-  if (process.env.NODE_ENV !== "development" ||
-      !origin ||
-      !/^http:\/\/(localhost|127\.0\.0\.1|\[::1\]|192\.168\.1\.55)(:\d+)?$/.test(origin) ||
-      origin !== `http://${request.headers.get("host")}`) {
-    return Response.json({ error: "结账接口仅供已配置的开发地址使用。" }, { status: 403 });
+  const host = request.headers.get("host");
+  const development = process.env.NODE_ENV === "development";
+  const allowed = development
+    ? origin !== null &&
+      /^http:\/\/(localhost|127\.0\.0\.1|\[::1\]|192\.168\.1\.55)(:\d+)?$/.test(origin) &&
+      origin === "http://" + host
+    : origin !== null &&
+      origin === process.env.POS_ALLOWED_ORIGIN &&
+      origin === "https://" + host;
+
+  if (!allowed) {
+    return Response.json({ error: "当前网址未获准提交结账。" }, { status: 403 });
   }
 
   const url = process.env.SUPABASE_URL;
