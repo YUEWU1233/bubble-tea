@@ -6,6 +6,18 @@ import { InventoryAdjustmentForm } from "./restock-form";
 import { checkOwnerSession } from "../owner-auth";
 import { signOutOwner } from "../owner-login/actions";
 
+const productNamesEn: Partial<Record<string, string>> = {
+  B1: "Bao Pork",
+  B2: "Bao Beef",
+  B3: "Bao Carrot & Egg",
+  B4: "Bao Mushroom & Zucchini",
+  B5: "Bao Red Bean",
+  R6: "Pork Dumplings",
+  R7: "Carrot & Egg Dumplings",
+  R8: "Beef Dumplings",
+  R9: "Mushroom & Zucchini Dumplings",
+};
+
 type InventoryProduct = {
   id: string;
   name: string;
@@ -54,38 +66,38 @@ async function OwnerInventory() {
   const products = await loadInventory();
 
   return (
-    <main className="mx-auto max-w-3xl p-6">
+    <main className="mx-auto max-w-5xl p-6">
       <div className="flex items-center justify-between gap-4">
-        <div className="flex flex-wrap items-center gap-4"><h1 className="text-2xl font-bold">库存管理</h1><Link href="/sales" className="text-sm underline">销售看板</Link></div>
+        <div className="flex flex-wrap items-center gap-4"><h1 className="text-2xl font-bold">库存管理 · Inventory</h1><Link href="/sales" className="text-sm underline">销售看板 · Sales</Link></div>
         <form action={signOutOwner}>
           <button type="submit" className="rounded-lg border px-4 py-2">
-            退出登录
+            退出登录 · Sign Out
           </button>
         </form>
       </div>
       {products === null ? (
-        <p role="alert" className="mt-6">暂时无法读取库存，请稍后刷新页面。</p>
+        <p role="alert" className="mt-6">暂时无法读取库存，请稍后刷新页面。 Unable to load inventory. Please refresh.</p>
       ) : products.length === 0 ? (
-        <p className="mt-6">暂无商品。</p>
+        <p className="mt-6">暂无商品。 No products.</p>
       ) : (
         <div className="mt-6 overflow-x-auto rounded-lg border border-stone-200">
           <table className="w-full text-left text-sm">
             <thead className="bg-stone-100 text-stone-900">
               <tr>
-                <th scope="col" className="px-3 py-3">编号</th>
-                <th scope="col" className="px-3 py-3">商品</th>
-                <th scope="col" className="px-3 py-3 text-right">当前余量</th>
-                <th scope="col" className="px-3 py-3">库存上新</th>
-                <th scope="col" className="px-3 py-3">损耗</th>
+                <th scope="col" className="px-3 py-3">编号 · ID</th>
+                <th scope="col" className="px-3 py-3">商品 · Product</th>
+                <th scope="col" className="px-3 py-3 text-right">当前余量 · In Stock</th>
+                <th scope="col" className="px-3 py-3">库存上新 · Restock</th>
+                <th scope="col" className="px-3 py-3">损耗 · Waste</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-200">
               {products.map(({ id, name, inventory }) => (
                 <tr key={id}>
                   <td className="break-all px-3 py-3">{id}</td>
-                  <th scope="row" className="px-3 py-3 font-medium">{name}</th>
+                  <th scope="row" className="px-3 py-3 font-medium">{name}{productNamesEn[id] && <span lang="en" className="block font-normal">{productNamesEn[id]}</span>}</th>
                   <td className="whitespace-nowrap px-3 py-3 text-right tabular-nums">
-                    {inventory?.quantity_on_hand ?? "未录入"}
+                    {inventory?.quantity_on_hand ?? "未录入 · Not Set"}
                   </td>
                   <td className="px-3 py-3"><InventoryAdjustmentForm productId={id} name={name} mode="restock" /></td>
                   <td className="px-3 py-3"><InventoryAdjustmentForm productId={id} name={name} mode="loss" /></td>

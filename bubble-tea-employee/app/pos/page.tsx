@@ -7,12 +7,13 @@ import type { Product, Variant } from "./menu";
 
 type CategoryId = (typeof categories)[number]["id"];
 
-type CartProduct = Pick<Product, "id" | "name" | "unavailable"> & Partial<Pick<Product, "subcategory">>;
+type CartProduct = Pick<Product, "id" | "name" | "nameEn" | "unavailable"> & Partial<Pick<Product, "subcategory">>;
 
-const toppingProducts: (CartProduct & { variants: Variant[] })[] = toppings.map(({ id, name, priceCents }) => ({
+const toppingProducts: (CartProduct & { variants: Variant[] })[] = toppings.map(({ id, name, nameEn, priceCents }) => ({
   id: `topping:${id}`,
   name,
-  variants: [{ id: "portion", label: "加一份", priceCents }],
+  nameEn,
+  variants: [{ id: "portion", label: "加一份 · Add 1", priceCents }],
 }));
 
 type CartItem = {
@@ -22,8 +23,8 @@ type CartItem = {
 };
 
 const paymentMethods = [
-  { id: "cash", label: "现金" },
-  { id: "card", label: "刷卡" },
+  { id: "cash", label: "现金 · Cash" },
+  { id: "card", label: "刷卡 · Card" },
   { id: "uber", label: "Uber Eats" },
 ] as const;
 
@@ -195,9 +196,9 @@ export default function PosPage() {
   );
 
   const visibleSubcategories = [
-    ["", { name: "全部" }] as const,
+    ["", { name: "全部", nameEn: "All" }] as const,
     ...categorySubcategories,
-    ...(categoryId === 2 ? [["toppings", { name: "小料" }] as const] : []),
+    ...(categoryId === 2 ? [["toppings", { name: "小料", nameEn: "Toppings" }] as const] : []),
   ];
 
   const visibleProducts: readonly (CartProduct & Pick<Product, "variants">)[] = subcategoryId === "toppings"
@@ -214,7 +215,7 @@ export default function PosPage() {
   return (
     <main className="min-h-screen bg-stone-50 px-4 py-8 text-stone-900">
       <div className="mx-auto max-w-5xl">
-        <h1 className="mb-6 text-3xl font-bold">店员收银</h1>
+        <h1 className="mb-6 text-3xl font-bold">店员收银 · POS</h1>
 
         <div className="mb-4 flex gap-2" role="group" aria-label="商品分类">
           {categories.map((category) => (
@@ -228,7 +229,7 @@ export default function PosPage() {
               }}
               className="rounded-lg border border-stone-300 bg-white px-5 py-2 font-medium aria-pressed:border-stone-900 aria-pressed:bg-stone-900 aria-pressed:text-white"
             >
-              {category.name}
+              {category.name} <span lang="en">{category.nameEn}</span>
             </button>
           ))}
         </div>
@@ -247,14 +248,14 @@ export default function PosPage() {
                 onClick={() => setSubcategoryId(id)}
                 className="rounded-full border border-stone-300 bg-white px-4 py-1.5 text-sm aria-pressed:border-emerald-700 aria-pressed:bg-emerald-700 aria-pressed:text-white"
               >
-                {subcategory.name}
+                {subcategory.name} <span lang="en">{subcategory.nameEn}</span>
               </button>
             ),
           )}
         </div>
 
         <section className="mb-6 rounded-xl border border-stone-200 bg-white p-4">
-          <h2 className="mb-3 text-lg font-semibold">购物车</h2>
+          <h2 className="mb-3 text-lg font-semibold">购物车 · Cart</h2>
 
           {cart.length === 0 && (
             <p className="text-sm text-stone-500">点击商品规格加入购物车。</p>
@@ -267,7 +268,7 @@ export default function PosPage() {
                 className="flex flex-wrap items-center justify-between gap-3 py-3"
               >
                 <div>
-                  <p className="font-medium">{product.name}</p>
+                  <p className="font-medium">{product.name} <span lang="en" className="ml-1 text-sm font-normal">{product.nameEn}</span></p>
                   <p className="text-sm text-stone-500">{variant.label}</p>
                 </div>
 
@@ -275,7 +276,7 @@ export default function PosPage() {
                   <button
                     type="button"
                     onClick={() => changeQuantity(product, variant, -1)}
-                    aria-label={`减少${product.name} ${variant.label}`}
+                    aria-label={`减少${product.name} ${product.nameEn} ${variant.label}`}
                     className="rounded border border-stone-300 px-3 py-1"
                   >
                     −
@@ -285,7 +286,7 @@ export default function PosPage() {
                     type="button"
                     onClick={() => changeQuantity(product, variant, 1)}
                     disabled={!canAdd(product, variant, cart)}
-                    aria-label={`增加${product.name} ${variant.label}`}
+                    aria-label={`增加${product.name} ${product.nameEn} ${variant.label}`}
                     className="rounded border border-stone-300 px-3 py-1 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     +
@@ -305,7 +306,7 @@ export default function PosPage() {
               </p>
             )}
             <p aria-live="polite" className="font-bold">
-              总计 {priceFormatter.format(totalCents / 100)}
+              总计 · Total {priceFormatter.format(totalCents / 100)}
             </p>
             <button
               ref={checkoutButton}
@@ -344,9 +345,9 @@ export default function PosPage() {
           className="fixed inset-0 m-auto w-[calc(100%-2rem)] max-w-sm rounded-xl bg-white p-6 text-stone-900 shadow-xl backdrop:bg-black/45"
         >
           <form onSubmit={confirmCheckout}>
-            <h2 id="checkout-title" className="text-xl font-semibold">结账</h2>
+            <h2 id="checkout-title" className="text-xl font-semibold">结账 · Checkout</h2>
             <p className="mt-2 font-medium">
-              应收 {priceFormatter.format(totalCents / 100)}
+              应收 · Amount Due {priceFormatter.format(totalCents / 100)}
             </p>
             {requiresLogin && (
               <a href="/staff-login" target="_blank" rel="noopener" className="mt-2 inline-block text-sm font-medium text-emerald-800 underline">
@@ -358,7 +359,7 @@ export default function PosPage() {
             )}
 
             <fieldset disabled={isSubmitting || checkoutId !== null} className="mt-5">
-              <legend className="mb-2 text-sm font-medium">付款方式</legend>
+              <legend className="mb-2 text-sm font-medium">付款方式 · Payment</legend>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                 {paymentMethods.map((method) => (
                   <label
@@ -393,7 +394,7 @@ export default function PosPage() {
                 disabled={!paymentMethod || isSubmitting}
                 className="rounded-lg bg-emerald-700 px-4 py-2 font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {isSubmitting ? "提交中…" : "确认收款"}
+                {isSubmitting ? "提交中…" : "确认收款 · Confirm"}
               </button>
             </div>
           </form>
@@ -414,7 +415,7 @@ export default function PosPage() {
                 key={product.id}
                 className={product.unavailable || soldOut ? "rounded-xl border border-stone-200 bg-stone-100 p-4 text-stone-500" : "rounded-xl border border-stone-200 bg-white p-4"}
               >
-                <h2 className="mb-3 text-lg font-semibold">{product.name}{(product.unavailable || soldOut) && <span className="ml-2 text-sm font-normal">{product.unavailable ? "暂停供应" : "已售罄"}</span>}</h2>
+                <h2 className="mb-3 text-lg font-semibold">{product.name} <span lang="en" className="ml-1 text-sm font-normal">{product.nameEn}</span>{(product.unavailable || soldOut) && <span className="ml-2 text-sm font-normal">{product.unavailable ? "暂停供应 · Unavailable" : "已售罄 · Sold Out"}</span>}</h2>
 
                 <ul className="space-y-2">
                   {product.variants.map((variant) => (
@@ -423,7 +424,7 @@ export default function PosPage() {
                         type="button"
                         onClick={() => changeQuantity(product, variant, 1)}
                         disabled={!canAdd(product, variant, cart)}
-                        aria-label={`加入${product.name} ${variant.label}`}
+                        aria-label={`加入${product.name} ${product.nameEn} ${variant.label}`}
                         className="flex w-full justify-between gap-3 rounded-lg bg-stone-100 px-3 py-2 text-left text-sm enabled:hover:bg-emerald-100 disabled:cursor-not-allowed disabled:bg-stone-200 disabled:text-stone-500"
                       >
                         <span>{variant.label}</span>

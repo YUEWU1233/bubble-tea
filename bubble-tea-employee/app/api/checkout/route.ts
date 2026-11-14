@@ -6,7 +6,7 @@ export async function POST(request: Request) {
   const development = process.env.NODE_ENV === "development";
   const allowed = development
     ? origin !== null &&
-      /^http:\/\/(localhost|127\.0\.0\.1|\[::1\]|192\.168\.1\.55)(:\d+)?$/.test(origin) &&
+      /^http:\/\/(localhost|127\.0\.0\.1|\[::1\]|192\.168\.1\.55|192\.168\.43\.70)(:\d+)?$/.test(origin) &&
       origin === "http://" + host
     : origin !== null &&
       origin === process.env.POS_ALLOWED_ORIGIN &&

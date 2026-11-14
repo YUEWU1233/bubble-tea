@@ -5,6 +5,7 @@ import { adjustInventory } from "./actions";
 
 export function InventoryAdjustmentForm({ productId, name, mode }: { productId: string; name: string; mode: "restock" | "loss" }) {
   const label = mode === "loss" ? "报损" : "补货";
+  const labelEn = mode === "loss" ? "Report Waste" : "Restock";
   const request = useRef<{ quantity: FormDataEntryValue | null; id: string } | null>(null);
   const [quantity, setQuantity] = useState("");
   const [result, submit, pending] = useActionState(async (previous: Parameters<typeof adjustInventory>[2], form: FormData) => {
@@ -27,9 +28,9 @@ export function InventoryAdjustmentForm({ productId, name, mode }: { productId: 
       <div className="flex flex-wrap gap-2">
         <input aria-label={name + label + "个数"} name="quantity" type="number" min="1" max="2147483647" step="1"
           required disabled={pending} value={quantity} onChange={(event) => setQuantity(event.target.value)}
-          placeholder="个数" className="w-20 rounded border px-2 py-1" />
+          placeholder="个数 · Qty" className="w-24 rounded border px-2 py-1" />
         <button type="submit" disabled={pending} className={mode === "loss" ? "rounded border border-red-700 px-3 py-1 text-red-700 disabled:opacity-50" : "rounded bg-emerald-700 px-3 py-1 text-white disabled:opacity-50"}>
-          {pending ? "登记中…" : label}
+          {pending ? "登记中… · Saving…" : <>{label} <span lang="en">{labelEn}</span></>}
         </button>
       </div>
       {result.message && <p role="status" className="mt-1 text-xs">{result.message}</p>}

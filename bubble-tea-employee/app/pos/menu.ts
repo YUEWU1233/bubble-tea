@@ -1,20 +1,20 @@
 export const categories = [
-  { id: 1, name: "熟食" },
-  { id: 2, name: "饮品" },
+  { id: 1, name: "熟食", nameEn: "Food" },
+  { id: 2, name: "饮品", nameEn: "Drinks" },
 ] as const;
 
 export const subcategories = {
-  bao: { categoryId: 1, name: "包子" },
-  dumplings: { categoryId: 1, name: "饺子" },
-  sides: { categoryId: 1, name: "小食" },
-  salads: { categoryId: 1, name: "沙拉" },
-  milkTea: { categoryId: 2, name: "奶茶" },
-  cheeseFoam: { categoryId: 2, name: "奶盖茶" },
-  freshFruitTea: { categoryId: 2, name: "新鲜水果茶" },
-  freshMilk: { categoryId: 2, name: "鲜奶" },
-  fruitTea: { categoryId: 2, name: "水果茶" },
-  coconut: { categoryId: 2, name: "椰椰系列" },
-  soyMilk: { categoryId: 2, name: "豆浆" },
+  bao: { categoryId: 1, name: "包子", nameEn: "Bao" },
+  dumplings: { categoryId: 1, name: "饺子", nameEn: "Dumplings" },
+  sides: { categoryId: 1, name: "小食", nameEn: "Sides" },
+  salads: { categoryId: 1, name: "沙拉", nameEn: "Salads" },
+  milkTea: { categoryId: 2, name: "奶茶", nameEn: "Milk Tea" },
+  cheeseFoam: { categoryId: 2, name: "奶盖茶", nameEn: "Cheese Foam Tea" },
+  freshFruitTea: { categoryId: 2, name: "新鲜水果茶", nameEn: "Fresh Fruit Tea" },
+  freshMilk: { categoryId: 2, name: "鲜奶", nameEn: "Fresh Milk" },
+  fruitTea: { categoryId: 2, name: "水果茶", nameEn: "Fruit Tea" },
+  coconut: { categoryId: 2, name: "椰椰系列", nameEn: "Coconut Drinks" },
+  soyMilk: { categoryId: 2, name: "豆浆", nameEn: "Soy Milk" },
 } as const;
 
 export type SubcategoryId = keyof typeof subcategories;
@@ -29,6 +29,7 @@ export type Variant = {
 export type Product = {
   id: string;
   name: string;
+  nameEn: string;
   subcategory: SubcategoryId;
   unavailable?: boolean;
   variants: readonly Variant[];
@@ -37,8 +38,8 @@ export type Product = {
 // 价格用整数分保存，例如 790 表示 CHF 7.90。
 function drinkSizes(price500: number, price700: number): Variant[] {
   return [
-    { id: "500ml", label: "中杯 · 500 mL", priceCents: price500 },
-    { id: "700ml", label: "大杯 · 700 mL", priceCents: price700 },
+    { id: "500ml", label: "中杯 · Medium 500 mL", priceCents: price500 },
+    { id: "700ml", label: "大杯 · Large 700 mL", priceCents: price700 },
   ];
 }
 
@@ -48,137 +49,137 @@ const freshFruitDrink = drinkSizes(800, 900);
 
 // stockUnits 表示卖出一个该规格时，要扣减的库存个数。
 const baoVariants: Variant[] = [
-  { id: "single", label: "单个", priceCents: 400, stockUnits: 1 },
-  { id: "portion-3", label: "3 个／份", priceCents: 1000, stockUnits: 3 },
+  { id: "single", label: "单个 · Single", priceCents: 400, stockUnits: 1 },
+  { id: "portion-3", label: "3 个／份 · 3 pcs", priceCents: 1000, stockUnits: 3 },
 ];
 
 const dumplingVariants: Variant[] = [
-  { id: "portion-5", label: "5 个／份", priceCents: 1000, stockUnits: 5 },
+  { id: "portion-5", label: "5 个／份 · 5 pcs", priceCents: 1000, stockUnits: 5 },
 ];
 
 export const products: readonly Product[] = [
   // 包子
-  { id: "B1", name: "猪肉白菜包", subcategory: "bao", variants: baoVariants },
-  { id: "B2", name: "牛肉粉条包", subcategory: "bao", variants: baoVariants },
-  { id: "B3", name: "胡萝卜鸡蛋包", subcategory: "bao", variants: baoVariants },
-  { id: "B4", name: "香菇节瓜包", subcategory: "bao", variants: baoVariants },
-  { id: "B5", name: "红豆沙包", subcategory: "bao", variants: baoVariants },
+  { id: "B1", name: "猪肉白菜包", nameEn: "Bao Pork", subcategory: "bao", variants: baoVariants },
+  { id: "B2", name: "牛肉粉条包", nameEn: "Bao Beef", subcategory: "bao", variants: baoVariants },
+  { id: "B3", name: "胡萝卜鸡蛋包", nameEn: "Bao Carrot & Egg", subcategory: "bao", variants: baoVariants },
+  { id: "B4", name: "香菇节瓜包", nameEn: "Bao Mushroom & Zucchini", subcategory: "bao", variants: baoVariants },
+  { id: "B5", name: "红豆沙包", nameEn: "Bao Red Bean", subcategory: "bao", variants: baoVariants },
 
   // 饺子
-  { id: "R6", name: "猪肉白菜饺子", subcategory: "dumplings", variants: dumplingVariants },
-  { id: "R7", name: "胡萝卜鸡蛋饺子", subcategory: "dumplings", variants: dumplingVariants },
-  { id: "R8", name: "牛肉饺子", subcategory: "dumplings", variants: dumplingVariants },
-  { id: "R9", name: "香菇节瓜饺子", subcategory: "dumplings", variants: dumplingVariants },
+  { id: "R6", name: "猪肉白菜饺子", nameEn: "Pork Dumplings", subcategory: "dumplings", variants: dumplingVariants },
+  { id: "R7", name: "胡萝卜鸡蛋饺子", nameEn: "Carrot & Egg Dumplings", subcategory: "dumplings", variants: dumplingVariants },
+  { id: "R8", name: "牛肉饺子", nameEn: "Beef Dumplings", subcategory: "dumplings", variants: dumplingVariants },
+  { id: "R9", name: "香菇节瓜饺子", nameEn: "Mushroom & Zucchini Dumplings", subcategory: "dumplings", variants: dumplingVariants },
 
   // 小食和沙拉
   {
     id: "9",
-    name: "五香茶叶蛋",
+    name: "五香茶叶蛋", nameEn: "Tea Egg",
     unavailable: true,
     subcategory: "sides",
-    variants: [{ id: "single", label: "1 个", priceCents: 250 }],
+    variants: [{ id: "single", label: "1 个 · 1 pc", priceCents: 250 }],
   },
   {
     id: "11",
-    name: "海带沙拉",
+    name: "海带沙拉", nameEn: "Seaweed Salad",
     unavailable: true,
     subcategory: "salads",
-    variants: [{ id: "portion", label: "1 份", priceCents: 900 }],
+    variants: [{ id: "portion", label: "1 份 · 1 serving", priceCents: 900 }],
   },
   {
     id: "12",
-    name: "蔬菜沙拉",
+    name: "蔬菜沙拉", nameEn: "Vegetable Salad",
     unavailable: true,
     subcategory: "salads",
-    variants: [{ id: "portion", label: "1 份", priceCents: 900 }],
+    variants: [{ id: "portion", label: "1 份 · 1 serving", priceCents: 900 }],
   },
 
   // 奶茶
   {
     id: "MT01",
-    name: "黑糖珍珠",
+    name: "黑糖珍珠", nameEn: "Brown Sugar Boba",
     subcategory: "milkTea",
     variants: standardDrink 
   },
-  { id: "MT02", name: "奥利奥奶茶", subcategory: "milkTea", variants: standardDrink },
-  { id: "MT03", name: "芋泥谷香血糯米", subcategory: "milkTea", variants: standardDrink },
-  { id: "MT04", name: "泰式奶茶", subcategory: "milkTea", variants: standardDrink },
-  { id: "MT05", name: "茉香云顶抹茶", subcategory: "milkTea", variants: premiumDrink },
-  { id: "MT06", name: "花田乌龙", subcategory: "milkTea", variants: premiumDrink },
-  { id: "MT07", name: "茉香满街", subcategory: "milkTea", variants: premiumDrink },
-  { id: "MT08", name: "伯牙绝弦", subcategory: "milkTea", variants: premiumDrink },
-  { id: "MT09", name: "幽兰拿铁", subcategory: "milkTea", variants: premiumDrink },
-  { id: "MT10", name: "声声乌龙", subcategory: "milkTea", variants: premiumDrink },
-  { id: "MT11", name: "山野栀子", subcategory: "milkTea", variants: premiumDrink },
+  { id: "MT02", name: "奥利奥奶茶", nameEn: "Oreo Milk Tea", subcategory: "milkTea", variants: standardDrink },
+  { id: "MT03", name: "芋泥谷香血糯米", nameEn: "Taro Sticky Rice", subcategory: "milkTea", variants: standardDrink },
+  { id: "MT04", name: "泰式奶茶", nameEn: "Thai Milk Tea", subcategory: "milkTea", variants: standardDrink },
+  { id: "MT05", name: "茉香云顶抹茶", nameEn: "Jasmine Matcha", subcategory: "milkTea", variants: premiumDrink },
+  { id: "MT06", name: "花田乌龙", nameEn: "Oolong Milk Tea", subcategory: "milkTea", variants: premiumDrink },
+  { id: "MT07", name: "茉香满街", nameEn: "Jasmine Cream Tea", subcategory: "milkTea", variants: premiumDrink },
+  { id: "MT08", name: "伯牙绝弦", nameEn: "Jasmine Milk Tea", subcategory: "milkTea", variants: premiumDrink },
+  { id: "MT09", name: "幽兰拿铁", nameEn: "Ceylon Latte", subcategory: "milkTea", variants: premiumDrink },
+  { id: "MT10", name: "声声乌龙", nameEn: "Peach Oolong", subcategory: "milkTea", variants: premiumDrink },
+  { id: "MT11", name: "山野栀子", nameEn: "Gardenia Tea", subcategory: "milkTea", variants: premiumDrink },
 
   // 奶盖茶
-  { id: "CF01", name: "芝芝芒芒", subcategory: "cheeseFoam", variants: standardDrink },
-  { id: "CF02", name: "芝芝葡萄", subcategory: "cheeseFoam", variants: standardDrink },
-  { id: "CF03", name: "芝芝草莓", subcategory: "cheeseFoam", variants: standardDrink },
-  { id: "CF04", name: "芝芝桃桃", subcategory: "cheeseFoam", variants: standardDrink },
-  { id: "CF05", name: "椰芝芒芒", subcategory: "cheeseFoam", variants: standardDrink },
+  { id: "CF01", name: "芝芝芒芒", nameEn: "Mango Cheese Foam", subcategory: "cheeseFoam", variants: standardDrink },
+  { id: "CF02", name: "芝芝葡萄", nameEn: "Grape Cheese Foam", subcategory: "cheeseFoam", variants: standardDrink },
+  { id: "CF03", name: "芝芝草莓", nameEn: "Strawberry Cheese Foam", subcategory: "cheeseFoam", variants: standardDrink },
+  { id: "CF04", name: "芝芝桃桃", nameEn: "Peach Cheese Foam", subcategory: "cheeseFoam", variants: standardDrink },
+  { id: "CF05", name: "椰芝芒芒", nameEn: "Coconut Mango Foam", subcategory: "cheeseFoam", variants: standardDrink },
 
   // 新鲜水果茶
-  { id: "FF01", name: "手打柠檬茶", subcategory: "freshFruitTea", variants: freshFruitDrink },
-  { id: "FF02", name: "暴打草莓茶", subcategory: "freshFruitTea", variants: freshFruitDrink },
-  { id: "FF03", name: "暴打草莓柠檬茶", subcategory: "freshFruitTea", variants: freshFruitDrink },
-  { id: "FF04", name: "百香果柠檬茶", subcategory: "freshFruitTea", variants: freshFruitDrink },
-  { id: "FF05", name: "芒果柠檬茶", subcategory: "freshFruitTea", variants: freshFruitDrink },
-  { id: "FF06", name: "玫瑰荔枝露", subcategory: "freshFruitTea", variants: freshFruitDrink },
-  { id: "FF07", name: "桃桃柠檬茶", subcategory: "freshFruitTea", variants: freshFruitDrink },
+  { id: "FF01", name: "手打柠檬茶", nameEn: "Lemon Tea", subcategory: "freshFruitTea", variants: freshFruitDrink },
+  { id: "FF02", name: "暴打草莓茶", nameEn: "Fresh Strawberry Tea", subcategory: "freshFruitTea", variants: freshFruitDrink },
+  { id: "FF03", name: "暴打草莓柠檬茶", nameEn: "Strawberry Lemon Tea", subcategory: "freshFruitTea", variants: freshFruitDrink },
+  { id: "FF04", name: "百香果柠檬茶", nameEn: "Passion Fruit Lemon Tea", subcategory: "freshFruitTea", variants: freshFruitDrink },
+  { id: "FF05", name: "芒果柠檬茶", nameEn: "Mango Lemon Tea", subcategory: "freshFruitTea", variants: freshFruitDrink },
+  { id: "FF06", name: "玫瑰荔枝露", nameEn: "Rose Lychee", subcategory: "freshFruitTea", variants: freshFruitDrink },
+  { id: "FF07", name: "桃桃柠檬茶", nameEn: "Peach Lemon Tea", subcategory: "freshFruitTea", variants: freshFruitDrink },
 
   // 鲜奶
-  { id: "FM01", name: "黑糖脏脏奶", subcategory: "freshMilk", variants: premiumDrink },
-  { id: "FM02", name: "草莓鲜奶", subcategory: "freshMilk", variants: premiumDrink },
-  { id: "FM03", name: "草莓奶麻薯", subcategory: "freshMilk", variants: premiumDrink },
-  { id: "FM04", name: "多肉芒芒牛乳", subcategory: "freshMilk", variants: premiumDrink },
-  { id: "FM05", name: "抹茶拿铁", subcategory: "freshMilk", variants: premiumDrink },
-  { id: "FM06", name: "牛油果草莓冰沙", subcategory: "freshMilk", variants: premiumDrink },
-  { id: "FM07", name: "咖啡拿铁", subcategory: "freshMilk", variants: premiumDrink },
+  { id: "FM01", name: "黑糖脏脏奶", nameEn: "Brown Sugar Milk", subcategory: "freshMilk", variants: premiumDrink },
+  { id: "FM02", name: "草莓鲜奶", nameEn: "Strawberry Milk", subcategory: "freshMilk", variants: premiumDrink },
+  { id: "FM03", name: "草莓奶麻薯", nameEn: "Strawberry Mochi Milk", subcategory: "freshMilk", variants: premiumDrink },
+  { id: "FM04", name: "多肉芒芒牛乳", nameEn: "Mango Milk", subcategory: "freshMilk", variants: premiumDrink },
+  { id: "FM05", name: "抹茶拿铁", nameEn: "Matcha Latte", subcategory: "freshMilk", variants: premiumDrink },
+  { id: "FM06", name: "牛油果草莓冰沙", nameEn: "Avocado Strawberry Smoothie", subcategory: "freshMilk", variants: premiumDrink },
+  { id: "FM07", name: "咖啡拿铁", nameEn: "Coffee Latte", subcategory: "freshMilk", variants: premiumDrink },
 
   // 水果茶
-  { id: "FT01", name: "芒果水果茶", subcategory: "fruitTea", variants: standardDrink },
-  { id: "FT02", name: "百香果水果茶", subcategory: "fruitTea", variants: standardDrink },
-  { id: "FT03", name: "水蜜桃水果茶", subcategory: "fruitTea", variants: standardDrink },
-  { id: "FT04", name: "荔枝水果茶", subcategory: "fruitTea", variants: standardDrink },
-  { id: "FT05", name: "草莓水果茶", subcategory: "fruitTea", variants: standardDrink },
-  { id: "FT06", name: "树莓水果茶", subcategory: "fruitTea", variants: standardDrink },
-  { id: "FT07", name: "蓝莓水果茶", subcategory: "fruitTea", variants: standardDrink },
+  { id: "FT01", name: "芒果水果茶", nameEn: "Mango Tea", subcategory: "fruitTea", variants: standardDrink },
+  { id: "FT02", name: "百香果水果茶", nameEn: "Passion Fruit Tea", subcategory: "fruitTea", variants: standardDrink },
+  { id: "FT03", name: "水蜜桃水果茶", nameEn: "Peach Tea", subcategory: "fruitTea", variants: standardDrink },
+  { id: "FT04", name: "荔枝水果茶", nameEn: "Lychee Tea", subcategory: "fruitTea", variants: standardDrink },
+  { id: "FT05", name: "草莓水果茶", nameEn: "Strawberry Tea", subcategory: "fruitTea", variants: standardDrink },
+  { id: "FT06", name: "树莓水果茶", nameEn: "Raspberry Tea", subcategory: "fruitTea", variants: standardDrink },
+  { id: "FT07", name: "蓝莓水果茶", nameEn: "Blueberry Tea", subcategory: "fruitTea", variants: standardDrink },
 
   // 椰椰系列
-  { id: "CO01", name: "抹茶椰椰麻薯", subcategory: "coconut", variants: premiumDrink },
-  { id: "CO02", name: "桂花椰椰冻", subcategory: "coconut", variants: premiumDrink },
-  { id: "CO03", name: "芒果奇亚籽椰椰", subcategory: "coconut", variants: premiumDrink },
-  { id: "CO04", name: "生椰拿铁", subcategory: "coconut", variants: premiumDrink },
+  { id: "CO01", name: "抹茶椰椰麻薯", nameEn: "Matcha Coconut Mochi", subcategory: "coconut", variants: premiumDrink },
+  { id: "CO02", name: "桂花椰椰冻", nameEn: "Osmanthus Coconut Jelly", subcategory: "coconut", variants: premiumDrink },
+  { id: "CO03", name: "芒果奇亚籽椰椰", nameEn: "Mango Chia Coconut", subcategory: "coconut", variants: premiumDrink },
+  { id: "CO04", name: "生椰拿铁", nameEn: "Coconut Latte", subcategory: "coconut", variants: premiumDrink },
   {
     id: "CO05",
-    name: "生椰杨枝甘露",
+    name: "生椰杨枝甘露", nameEn: "Mango Pomelo Coconut",
     subcategory: "coconut",
-    variants: [{ id: "700ml", label: "大杯 · 700 mL", priceCents: 900 }],
+    variants: [{ id: "700ml", label: "大杯 · Large 700 mL", priceCents: 900 }],
   },
 
   // 豆浆
   {
     id: "10",
-    name: "中式豆浆",
+    name: "中式豆浆", nameEn: "Soy Milk",
     subcategory: "soyMilk",
     variants: [{ id: "250ml", label: "250 mL", priceCents: 500 }],
   },
 ];
 
 export const toppings = [
-  { id: "tapioca", name: "珍珠", priceCents: 50 },
-  { id: "coconut-jelly", name: "椰果", priceCents: 50 },
-  { id: "crystal-boba", name: "脆啵啵", priceCents: 50 },
-  { id: "oreo", name: "奥利奥", priceCents: 50 },
-  { id: "popping-boba-strawberry", name: "草莓爆爆珠", priceCents: 50 },
-  { id: "popping-boba-mango", name: "芒果爆爆珠", priceCents: 50 },
-  { id: "popping-boba-passion-fruit", name: "百香果爆爆珠", priceCents: 50 },
-  { id: "popping-boba-peach", name: "水蜜桃爆爆珠", priceCents: 50 },
-  { id: "popping-boba-lychee", name: "荔枝爆爆珠", priceCents: 50 },
-  { id: "mochi", name: "麻薯", priceCents: 100 },
-  { id: "cheese-foam", name: "奶盖", priceCents: 100 },
-  { id: "red-sticky-rice", name: "血糯米", priceCents: 100 },
+  { id: "tapioca", name: "珍珠", nameEn: "Boba", priceCents: 50 },
+  { id: "coconut-jelly", name: "椰果", nameEn: "Coconut Jelly", priceCents: 50 },
+  { id: "crystal-boba", name: "脆啵啵", nameEn: "Crystal Boba", priceCents: 50 },
+  { id: "oreo", name: "奥利奥", nameEn: "Oreo", priceCents: 50 },
+  { id: "popping-boba-strawberry", name: "草莓爆爆珠", nameEn: "Strawberry Popping Boba", priceCents: 50 },
+  { id: "popping-boba-mango", name: "芒果爆爆珠", nameEn: "Mango Popping Boba", priceCents: 50 },
+  { id: "popping-boba-passion-fruit", name: "百香果爆爆珠", nameEn: "Passion Fruit Popping Boba", priceCents: 50 },
+  { id: "popping-boba-peach", name: "水蜜桃爆爆珠", nameEn: "Peach Popping Boba", priceCents: 50 },
+  { id: "popping-boba-lychee", name: "荔枝爆爆珠", nameEn: "Lychee Popping Boba", priceCents: 50 },
+  { id: "mochi", name: "麻薯", nameEn: "Mochi", priceCents: 100 },
+  { id: "cheese-foam", name: "奶盖", nameEn: "Cheese Foam", priceCents: 100 },
+  { id: "red-sticky-rice", name: "血糯米", nameEn: "Red Sticky Rice", priceCents: 100 },
 ] as const;
 
 export type Topping = (typeof toppings)[number];
